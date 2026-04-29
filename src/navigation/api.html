@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+  <button id="btn">Cargar ligas</button>
+  <div id="resultado"></div>
+
+  <script>
+    const API_KEY = '62eb416199ca2d19e7b27c836b59b1cb'; // Tu API key
+
+    $('#btn').on('click', function() {
+      $('#resultado').html('Cargando equipos...');
+      $.ajax({
+        // Consultamos los equipos de la Premier League (ID: 39) para la temporada 2024
+        url: 'https://v3.football.api-sports.io/teams?league=39&season=2019',
+        method: 'GET',
+        headers: {
+          'x-apisports-key': API_KEY
+        },
+        success: function(data) {
+          console.log(data);
+          const equipos = data.response;
+          if (equipos.length === 0) {
+            $('#resultado').html('No se encontraron equipos.');
+            return;
+          }
+          let html = '<h3>Equipos de la Premier League</h3><ul style="list-style:none; padding:0;">';
+          equipos.forEach(function(item) {
+            html += `<li style="margin-bottom:10px; display:flex; align-items:center;">
+                      <img src="${item.team.logo}" width="40" style="margin-right:15px;">
+                      <div>
+                        <strong>${item.team.name}</strong><br>
+                        <small style="color:#666;">${item.venue.name} (${item.venue.city})</small>
+                      </div>
+                    </li>`;
+          });
+          html += '</ul>';
+          $('#resultado').html(html);
+        },
+        error: function(err) {
+          console.error(err);
+          $('#resultado').html('<p style="color:red">Error al cargar los equipos</p>');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
