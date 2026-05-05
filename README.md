@@ -52,6 +52,11 @@ Los datos del fútbol, equipos, ligas y partidos se obtienen conectándose a la 
 * **Punto de Endpoints API v1:** `https://www.thesportsdb.com/api/v1/json/{API_KEY}/`
 * **API Key Pública para Testing:** `3`
 
+## Base de Datos de Supabase 
+
+La pueden usar para guardar favoritos, foto de perfil y usuarios en la tabla de supabase  `users` esta de assets user.png
+
+
 ### Ejemplos útiles a consumir:
 - Listar todos los equipos en una liga (Ejem: English Premier League):
   `https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=English%20Premier%20League`
