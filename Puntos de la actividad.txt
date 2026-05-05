@@ -1,0 +1,51 @@
+# PROYECTO DE CÁTEDRA - APP FÚTBOL
+## Checklist de Requerimientos y Estado Actual
+
+---
+
+### 1. Navegación
+**Estado: [✓] COMPLETADO**
+- [x] **StackNavigator:** Implementado en `src/navigation/StackNavigator.js`. Define las rutas Home y Details.
+- [x] **BottomTabNavigator:** Implementado en `src/navigation/MainContainer.js`. Gestiona Inicio, Resultados, Perfil y Calendario.
+- [x] **Envío de Parámetros:** Verificado entre `HomeScreen` y `DetailScreen` pasando el objeto del equipo.
+
+---
+
+### 2. Almacenamiento de Datos
+**Estado: [⚠] EN PROCESO**
+- [x] **AsyncStorage (Login):** Se usa en `App.js` para mantener la sesión iniciada.
+- [ ] **AsyncStorage (Preferencias/Favoritos):** FALTA persistir la lista de favoritos en `favoritesStore.js`. Actualmente es volátil.
+- [ ] **expo-secure-store:** FALTA implementar para datos sensibles como tokens o credenciales seguras.
+
+---
+
+### 3. Consumo de API REST
+**Estado: [✓] COMPLETADO (Ampliación recomendada)**
+- [x] **Integración:** Uso de *TheSportsDB API* en `src/services/sportsApi.js`.
+- [ ] **Interactividad:** Se recomienda agregar filtros por liga o un buscador de equipos/jugadores para mayor interactividad.
+
+---
+
+### 4. Sensores y APIs del dispositivo
+**Estado: [✗] PENDIENTE**
+*Se deben integrar al menos DOS de los siguientes:*
+- [ ] **expo-location (GPS):** Ejemplo: Mostrar estadios o noticias regionales.
+- [ ] **expo-camera:** Ejemplo: Foto de perfil del usuario.
+- [ ] **expo-av (Audio/Video):** Ejemplo: Resúmenes de partidos o sonidos de ambiente.
+- [ ] **Manejo de permisos:** Implementar la lógica de solicitud de permisos para los sensores elegidos.
+
+---
+
+## 🚀 Propuestas para destacar la App
+
+### A. Persistencia y Seguridad
+*   **Favoritos Reales:** Hacer que los equipos guardados sigan ahí al reiniciar la app.
+*   **Token Seguro:** Simular un login con token y guardarlo en `SecureStore`.
+
+### B. Nuevas Funcionalidades (Sensores)
+*   **Foto de Perfil:** En la pantalla "Perfil", permitir usar la cámara para que el usuario personalice su cuenta.
+*   **Localización:** Detectar la ubicación para saludar al usuario indicando su ciudad o mostrar partidos en su zona.
+
+### C. Experiencia de Usuario (UX)
+*   **Modo Oscuro:** Guardar la preferencia de tema en `AsyncStorage`.
+*   **Skeleton Loaders:** Mejorar visualmente el tiempo de espera mientras carga la API.
