@@ -7,7 +7,10 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  Platform,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
 import {
   getFavorites,
   addFavorite,
@@ -35,6 +38,99 @@ export default function PerfilScreen({ onLogout }) {
   const [availableTeams, setAvailableTeams] = useState([]);
   const [badges, setBadges] = useState({});
   const [availableBadges, setAvailableBadges] = useState({});
+  const [profileImage, setProfileImage] = useState(null);
+
+  useEffect(() => {
+    const loadProfileImage = async () => {
+      try {
+        const savedImage = await AsyncStorage.getItem("profile_image");
+        if (savedImage) setProfileImage(savedImage);
+      } catch (err) {
+        console.log("Error loading profile image:", err);
+      }
+    };
+    loadProfileImage();
+  }, []);
+
+  const handlePickImage = async () => {
+    if (Platform.OS === "web") {
+      pickFromGallery();
+      return;
+    }
+
+    Alert.alert(
+      "Foto de Perfil",
+      "Selecciona una opción",
+      [
+        {
+          text: "Tomar Foto",
+          onPress: takePhoto,
+        },
+        {
+          text: "Elegir de Galería",
+          onPress: pickFromGallery,
+        },
+        {
+          text: "Eliminar Foto",
+          onPress: removePhoto,
+          style: "destructive",
+        },
+        { text: "Cancelar", style: "cancel" },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permiso denegado",
+        "Lo sentimos, necesitamos permisos de cámara para hacer esto."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setProfileImage(uri);
+      await AsyncStorage.setItem("profile_image", uri);
+    }
+  };
+
+  const pickFromGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permiso denegado",
+        "Lo sentimos, necesitamos permisos de galería para hacer esto."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setProfileImage(uri);
+      await AsyncStorage.setItem("profile_image", uri);
+    }
+  };
+
+  const removePhoto = async () => {
+    setProfileImage(null);
+    await AsyncStorage.removeItem("profile_image");
+  };
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -124,9 +220,18 @@ export default function PerfilScreen({ onLogout }) {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileSection}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>👤</Text>
-        </View>
+        <TouchableOpacity style={styles.avatarContainer} onPress={handlePickImage}>
+          <View style={styles.avatar}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+              <Text style={styles.avatarText}>👤</Text>
+            )}
+          </View>
+          <View style={styles.cameraIconContainer}>
+            <Text style={styles.cameraIcon}>📷</Text>
+          </View>
+        </TouchableOpacity>
         <Text style={styles.userName}>Ander (DPS)</Text>
         <Text style={styles.userEmail}>ander.dps@email.com</Text>
         <TouchableOpacity style={styles.logoutBtn} onPress={() => onLogout?.()}>
@@ -241,14 +346,40 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingVertical: 24,
   },
+  avatarContainer: {
+    position: "relative",
+    marginBottom: 12,
+  },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: "#f0f0f0",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    overflow: "hidden",
+    borderWidth: 3,
+    borderColor: "#f4511e",
+  },
+  profileImage: {
+    width: "100%",
+    height: "100%",
+  },
+  cameraIconContainer: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#f4511e",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  cameraIcon: {
+    fontSize: 14,
   },
   avatarText: { fontSize: 36 },
   userName: { fontSize: 20, fontWeight: "bold", color: "#333" },
