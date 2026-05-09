@@ -11,6 +11,7 @@ import {
   TextInput,
 } from "react-native";
 import EventDetailScreen from "./EventDetailScreen";
+import { useTheme } from "../context/ThemeContext";
 
 const BASE_URL = "https://www.thesportsdb.com/api/v1/json/3";
 
@@ -41,6 +42,7 @@ export default function ResultadosScreen() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const { colors, dark } = useTheme();
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -116,14 +118,125 @@ export default function ResultadosScreen() {
     return acc;
   }, {});
 
+  const dynamicStyles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    filtersWrapper: {
+      backgroundColor: colors.card,
+      height: 56,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    filterBtn: {
+      height: 34,
+      paddingHorizontal: 16,
+      borderRadius: 17,
+      backgroundColor: dark ? "#333" : "#f0f0f0",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    filterActive: { backgroundColor: colors.primary },
+    filterText: { fontSize: 13, fontWeight: "600", color: colors.secondary },
+    filterTextActive: { color: "#fff" },
+    searchWrapper: {
+      backgroundColor: colors.card,
+      paddingHorizontal: 15,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    searchRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+    },
+    searchInput: {
+      flex: 1,
+      height: 40,
+      fontSize: 14,
+      color: colors.text,
+    },
+    selectedTeamChip: {
+      marginTop: 8,
+      alignSelf: "flex-start",
+      backgroundColor: colors.primary,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+    },
+    suggestions: {
+      marginTop: 6,
+      borderRadius: 10,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+    },
+    suggestionItem: {
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+      backgroundColor: colors.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    suggestionText: { fontSize: 14, color: colors.text },
+    leagueTitle: {
+      paddingHorizontal: 15,
+      paddingTop: 15,
+      paddingBottom: 5,
+      fontWeight: "bold",
+      color: colors.secondary,
+      fontSize: 12,
+    },
+    card: {
+      backgroundColor: colors.card,
+      marginHorizontal: 15,
+      marginBottom: 10,
+      borderRadius: 12,
+      padding: 15,
+    },
+    cardDate: { fontSize: 11, color: colors.secondary },
+    cardSeason: { fontSize: 11, color: colors.primary, fontWeight: "600" },
+    badgePlaceholder: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: dark ? "#333" : "#f0f0f0",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    badgeText: { fontSize: 10, fontWeight: "bold", color: colors.secondary },
+    teamName: {
+      fontSize: 12,
+      fontWeight: "600",
+      textAlign: "center",
+      color: colors.text,
+    },
+    score: { fontSize: 20, fontWeight: "bold", color: colors.primary },
+    status: { fontSize: 11, color: colors.secondary, marginTop: 2 },
+    goalsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 10,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      gap: 10,
+    },
+    goalsText: { flex: 1, fontSize: 11, color: colors.secondary, lineHeight: 16 },
+  });
+
   if (loading)
     return (
-      <ActivityIndicator size="large" color="#CC0000" style={{ flex: 1 }} />
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
     );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.filtersWrapper}>
+    <View style={dynamicStyles.container}>
+      <View style={dynamicStyles.filtersWrapper}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -133,15 +246,15 @@ export default function ResultadosScreen() {
             <TouchableOpacity
               key={sport}
               style={[
-                styles.filterBtn,
-                selectedSport === sport && styles.filterActive,
+                dynamicStyles.filterBtn,
+                selectedSport === sport && dynamicStyles.filterActive,
               ]}
               onPress={() => setSelectedSport(sport)}
             >
               <Text
                 style={[
-                  styles.filterText,
-                  selectedSport === sport && styles.filterTextActive,
+                  dynamicStyles.filterText,
+                  selectedSport === sport && dynamicStyles.filterTextActive,
                 ]}
               >
                 {sport}
@@ -152,12 +265,12 @@ export default function ResultadosScreen() {
       </View>
 
       {/* Barra de búsqueda */}
-      <View style={styles.searchWrapper}>
-        <View style={styles.searchRow}>
+      <View style={dynamicStyles.searchWrapper}>
+        <View style={dynamicStyles.searchRow}>
           <TextInput
-            style={styles.searchInput}
+            style={dynamicStyles.searchInput}
             placeholder="Buscar equipo..."
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.secondary}
             value={searchQuery}
             onChangeText={text => {
               setSearchQuery(text);
@@ -176,21 +289,21 @@ export default function ResultadosScreen() {
 
         {/* Chip del equipo seleccionado */}
         {selectedTeam && (
-          <View style={styles.selectedTeamChip}>
+          <View style={dynamicStyles.selectedTeamChip}>
             <Text style={styles.selectedTeamText}>{selectedTeam}</Text>
           </View>
         )}
 
         {/* Sugerencias */}
         {suggestions.length > 0 && (
-          <View style={styles.suggestions}>
+          <View style={dynamicStyles.suggestions}>
             {suggestions.map(team => (
               <TouchableOpacity
                 key={team}
-                style={styles.suggestionItem}
+                style={dynamicStyles.suggestionItem}
                 onPress={() => { setSelectedTeam(team); setSearchQuery(team); }}
               >
-                <Text style={styles.suggestionText}>{team}</Text>
+                <Text style={dynamicStyles.suggestionText}>{team}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -202,20 +315,20 @@ export default function ResultadosScreen() {
         keyExtractor={(item) => item}
         renderItem={({ item: league }) => (
           <View>
-            <Text style={styles.leagueTitle}>{league.toUpperCase()}</Text>
+            <Text style={dynamicStyles.leagueTitle}>{league.toUpperCase()}</Text>
             {grouped[league].map((event) => (
               <TouchableOpacity
                 key={event.id}
-                style={styles.card}
+                style={dynamicStyles.card}
                 onPress={() => setSelectedEvent(event)}
               >
                 {/* Fecha y temporada */}
                 <View style={styles.cardHeader}>
                   {event.dateEvent && (
-                    <Text style={styles.cardDate}>{event.dateEvent}</Text>
+                    <Text style={dynamicStyles.cardDate}>{event.dateEvent}</Text>
                   )}
                   {event.season && (
-                    <Text style={styles.cardSeason}>Temp. {event.season}</Text>
+                    <Text style={dynamicStyles.cardSeason}>Temp. {event.season}</Text>
                   )}
                 </View>
 
@@ -229,20 +342,20 @@ export default function ResultadosScreen() {
                         resizeMode="contain"
                       />
                     ) : (
-                      <View style={styles.badgePlaceholder}>
-                        <Text style={styles.badgeText}>
+                      <View style={dynamicStyles.badgePlaceholder}>
+                        <Text style={dynamicStyles.badgeText}>
                           {event.homeTeam.substring(0, 3).toUpperCase()}
                         </Text>
                       </View>
                     )}
-                    <Text style={styles.teamName}>{event.homeTeam}</Text>
+                    <Text style={dynamicStyles.teamName}>{event.homeTeam}</Text>
                   </View>
 
                   <View style={styles.scoreBox}>
-                    <Text style={styles.score}>
+                    <Text style={dynamicStyles.score}>
                       {event.homeScore ?? "-"} - {event.awayScore ?? "-"}
                     </Text>
-                    <Text style={styles.status}>{event.status}</Text>
+                    <Text style={dynamicStyles.status}>{event.status}</Text>
                   </View>
 
                   <View style={styles.teamBox}>
@@ -253,23 +366,23 @@ export default function ResultadosScreen() {
                         resizeMode="contain"
                       />
                     ) : (
-                      <View style={styles.badgePlaceholder}>
-                        <Text style={styles.badgeText}>
+                      <View style={dynamicStyles.badgePlaceholder}>
+                        <Text style={dynamicStyles.badgeText}>
                           {event.awayTeam.substring(0, 3).toUpperCase()}
                         </Text>
                       </View>
                     )}
-                    <Text style={styles.teamName}>{event.awayTeam}</Text>
+                    <Text style={dynamicStyles.teamName}>{event.awayTeam}</Text>
                   </View>
                 </View>
 
                 {/* Goleadores */}
                 {(event.homeGoals || event.awayGoals) && (
-                  <View style={styles.goalsRow}>
-                    <Text style={styles.goalsText} numberOfLines={2}>
+                  <View style={dynamicStyles.goalsRow}>
+                    <Text style={dynamicStyles.goalsText} numberOfLines={2}>
                       {event.homeGoals || ""}
                     </Text>
-                    <Text style={styles.goalsText} numberOfLines={2}>
+                    <Text style={dynamicStyles.goalsText} numberOfLines={2}>
                       {event.awayGoals || ""}
                     </Text>
                   </View>
@@ -307,13 +420,6 @@ export default function ResultadosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  filtersWrapper: {
-    backgroundColor: "#fff",
-    height: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
   filtersContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -321,85 +427,14 @@ const styles = StyleSheet.create({
     height: 56,
     gap: 8,
   },
-  filterBtn: {
-    height: 34,
-    paddingHorizontal: 16,
-    borderRadius: 17,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  filterActive: { backgroundColor: "#CC0000" },
-  filterText: { fontSize: 13, fontWeight: "600", color: "#666" },
-  filterTextActive: { color: "#fff" },
-  searchWrapper: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 14,
-    color: "#333",
-  },
   clearBtn: { padding: 4 },
   clearBtnText: { color: "#aaa", fontSize: 16 },
-  selectedTeamChip: {
-    marginTop: 8,
-    alignSelf: "flex-start",
-    backgroundColor: "#CC0000",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
   selectedTeamText: { color: "#fff", fontSize: 13, fontWeight: "600" },
-  suggestions: {
-    marginTop: 6,
-    borderRadius: 10,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#eee",
-  },
-  suggestionItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  suggestionText: { fontSize: 14, color: "#333" },
-  leagueTitle: {
-    paddingHorizontal: 15,
-    paddingTop: 15,
-    paddingBottom: 5,
-    fontWeight: "bold",
-    color: "#999",
-    fontSize: 12,
-  },
-  card: {
-    backgroundColor: "#fff",
-    marginHorizontal: 15,
-    marginBottom: 10,
-    borderRadius: 12,
-    padding: 15,
-  },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
   },
-  cardDate: { fontSize: 11, color: "#999" },
-  cardSeason: { fontSize: 11, color: "#CC0000", fontWeight: "600" },
   teamsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -407,34 +442,7 @@ const styles = StyleSheet.create({
   },
   teamBox: { flex: 1, alignItems: "center", gap: 6 },
   badgeImage: { width: 40, height: 40 },
-  badgePlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeText: { fontSize: 10, fontWeight: "bold", color: "#666" },
-  teamName: {
-    fontSize: 12,
-    fontWeight: "600",
-    textAlign: "center",
-    color: "#333",
-  },
   scoreBox: { alignItems: "center", paddingHorizontal: 10 },
-  score: { fontSize: 20, fontWeight: "bold", color: "#CC0000" },
-  status: { fontSize: 11, color: "#999", marginTop: 2 },
-  goalsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    gap: 10,
-  },
-  goalsText: { flex: 1, fontSize: 11, color: "#555", lineHeight: 16 },
   cardsRow: {
     flexDirection: "row",
     justifyContent: "space-between",

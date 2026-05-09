@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../context/ThemeContext";
 
 // Import Navigation & Screens
 import StackNavigator from "./StackNavigator";
@@ -17,6 +18,8 @@ const calendarName = "Calendario";
 const Tab = createBottomTabNavigator();
 
 function MainContainer({ onLogout }) {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       initialRouteName={homeName}
@@ -37,10 +40,15 @@ function MainContainer({ onLogout }) {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "#f4511e",
-        tabBarInactiveTintColor: "grey",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.secondary,
         tabBarLabelStyle: { paddingBottom: 10, fontSize: 10 },
-        tabBarStyle: { padding: 10, height: 70 },
+        tabBarStyle: { 
+          padding: 10, 
+          height: 70, 
+          backgroundColor: colors.card,
+          borderTopColor: colors.border
+        },
         headerShown: false, // Ocultamos el header del Tab para que el Stack tome el control
       })}
     >
@@ -50,7 +58,7 @@ function MainContainer({ onLogout }) {
         component={ResultadosScreen}
         options={{
           headerShown: true,
-          headerStyle: { backgroundColor: "#f4511e" },
+          headerStyle: { backgroundColor: colors.primary },
           headerTintColor: "#fff",
           headerTitleStyle: { fontWeight: "bold" },
         }}
@@ -59,7 +67,7 @@ function MainContainer({ onLogout }) {
         name={profileName}
         options={{
           headerShown: true,
-          headerStyle: { backgroundColor: "#f4511e" },
+          headerStyle: { backgroundColor: colors.primary },
           headerTintColor: "#fff",
           headerTitleStyle: { fontWeight: "bold" },
         }}
@@ -71,7 +79,7 @@ function MainContainer({ onLogout }) {
         component={CalendarioScreen}
         options={{
           headerShown: true,
-          headerStyle: { backgroundColor: "#f4511e" },
+          headerStyle: { backgroundColor: colors.primary },
           headerTintColor: "#fff",
           headerTitleStyle: { fontWeight: "bold" },
         }}

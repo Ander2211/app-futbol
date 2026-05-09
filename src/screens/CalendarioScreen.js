@@ -11,6 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const BASE_URL = 'https://www.thesportsdb.com/api/v1/json/3';
 
@@ -46,6 +47,7 @@ export default function CalendarioScreen() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState('Todas');
+  const { colors, dark } = useTheme();
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -88,19 +90,91 @@ export default function CalendarioScreen() {
     return acc;
   }, {});
 
+  const dynamicStyles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
+    loadingText: { marginTop: 10, color: colors.primary, fontWeight: 'bold' },
+    filtersWrapper: {
+      backgroundColor: colors.card,
+      height: 56,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    filterBtn: {
+      height: 34,
+      paddingHorizontal: 16,
+      borderRadius: 17,
+      backgroundColor: dark ? "#333" : "#f0f0f0",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    filterActive: { backgroundColor: colors.primary },
+    filterText: { fontSize: 13, fontWeight: "600", color: colors.secondary },
+    filterTextActive: { color: "#fff" },
+    leagueTitle: {
+      fontWeight: 'bold',
+      color: colors.secondary,
+      fontSize: 12,
+      paddingBottom: 8,
+      paddingTop: 4,
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: dark ? 0.3 : 0.08,
+      shadowRadius: 3,
+    },
+    dateRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+      paddingBottom: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    dateText: { fontSize: 13, fontWeight: '600', color: colors.secondary },
+    timeText: { fontSize: 13, fontWeight: '700', color: colors.primary },
+    badgePlaceholder: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: dark ? '#333' : '#f0f0f0',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    badgeText: { fontSize: 10, fontWeight: 'bold', color: colors.secondary },
+    teamName: { fontSize: 13, fontWeight: '700', color: colors.text, textAlign: 'center' },
+    venueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 10,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    venueText: { fontSize: 12, color: colors.secondary },
+  });
+
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#CC0000" />
-        <Text style={styles.loadingText}>Cargando calendario...</Text>
+      <View style={dynamicStyles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={dynamicStyles.loadingText}>Cargando calendario...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={dynamicStyles.container}>
       {/* Filtros por deporte */}
-      <View style={styles.filtersWrapper}>
+      <View style={dynamicStyles.filtersWrapper}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -109,10 +183,10 @@ export default function CalendarioScreen() {
           {SPORTS.map((sport) => (
             <TouchableOpacity
               key={sport}
-              style={[styles.filterBtn, selectedSport === sport && styles.filterActive]}
+              style={[dynamicStyles.filterBtn, selectedSport === sport && dynamicStyles.filterActive]}
               onPress={() => setSelectedSport(sport)}
             >
-              <Text style={[styles.filterText, selectedSport === sport && styles.filterTextActive]}>
+              <Text style={[dynamicStyles.filterText, selectedSport === sport && dynamicStyles.filterTextActive]}>
                 {sport}
               </Text>
             </TouchableOpacity>
@@ -128,17 +202,17 @@ export default function CalendarioScreen() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item: league }) => (
             <View>
-              <Text style={styles.leagueTitle}>{league.toUpperCase()}</Text>
+              <Text style={dynamicStyles.leagueTitle}>{league.toUpperCase()}</Text>
               {grouped[league].map((event) => (
-                <View key={event.id} style={styles.card}>
+                <View key={event.id} style={dynamicStyles.card}>
                   {/* Fecha y hora */}
-                  <View style={styles.dateRow}>
+                  <View style={dynamicStyles.dateRow}>
                     <View style={styles.dateLeft}>
-                      <Ionicons name="calendar-outline" size={13} color="#999" />
-                      <Text style={styles.dateText}>{event.dateEvent || 'Fecha por confirmar'}</Text>
+                      <Ionicons name="calendar-outline" size={13} color={colors.secondary} />
+                      <Text style={dynamicStyles.dateText}>{event.dateEvent || 'Fecha por confirmar'}</Text>
                     </View>
                     {event.time && (
-                      <Text style={styles.timeText}>{event.time} (SV)</Text>
+                      <Text style={dynamicStyles.timeText}>{event.time} (SV)</Text>
                     )}
                   </View>
 
@@ -148,11 +222,11 @@ export default function CalendarioScreen() {
                       {event.homeBadge ? (
                         <Image source={{ uri: event.homeBadge }} style={styles.badge} resizeMode="contain" />
                       ) : (
-                        <View style={styles.badgePlaceholder}>
-                          <Text style={styles.badgeText}>{event.homeTeam.substring(0, 3).toUpperCase()}</Text>
+                        <View style={dynamicStyles.badgePlaceholder}>
+                          <Text style={dynamicStyles.badgeText}>{event.homeTeam.substring(0, 3).toUpperCase()}</Text>
                         </View>
                       )}
-                      <Text style={styles.teamName} numberOfLines={2}>{event.homeTeam}</Text>
+                      <Text style={dynamicStyles.teamName} numberOfLines={2}>{event.homeTeam}</Text>
                     </View>
 
                     <Text style={styles.vsText}>VS</Text>
@@ -161,19 +235,19 @@ export default function CalendarioScreen() {
                       {event.awayBadge ? (
                         <Image source={{ uri: event.awayBadge }} style={styles.badge} resizeMode="contain" />
                       ) : (
-                        <View style={styles.badgePlaceholder}>
-                          <Text style={styles.badgeText}>{event.awayTeam.substring(0, 3).toUpperCase()}</Text>
+                        <View style={dynamicStyles.badgePlaceholder}>
+                          <Text style={dynamicStyles.badgeText}>{event.awayTeam.substring(0, 3).toUpperCase()}</Text>
                         </View>
                       )}
-                      <Text style={styles.teamName} numberOfLines={2}>{event.awayTeam}</Text>
+                      <Text style={dynamicStyles.teamName} numberOfLines={2}>{event.awayTeam}</Text>
                     </View>
                   </View>
 
                   {/* Estadio */}
                   {event.venue && (
-                    <View style={styles.venueRow}>
-                      <Ionicons name="location-outline" size={13} color="#999" />
-                      <Text style={styles.venueText}>{event.venue}</Text>
+                    <View style={dynamicStyles.venueRow}>
+                      <Ionicons name="location-outline" size={13} color={colors.secondary} />
+                      <Text style={dynamicStyles.venueText}>{event.venue}</Text>
                     </View>
                   )}
                 </View>
@@ -192,15 +266,6 @@ export default function CalendarioScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8F9FA' },
-  loadingText: { marginTop: 10, color: '#CC0000', fontWeight: 'bold' },
-  filtersWrapper: {
-    backgroundColor: '#fff',
-    height: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
   filtersContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -208,48 +273,8 @@ const styles = StyleSheet.create({
     height: 56,
     gap: 8,
   },
-  filterBtn: {
-    height: 34,
-    paddingHorizontal: 16,
-    borderRadius: 17,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterActive: { backgroundColor: '#CC0000' },
-  filterText: { fontSize: 13, fontWeight: '600', color: '#666' },
-  filterTextActive: { color: '#fff' },
   listContent: { padding: 15 },
-  leagueTitle: {
-    fontWeight: 'bold',
-    color: '#999',
-    fontSize: 12,
-    paddingBottom: 8,
-    paddingTop: 4,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
   dateLeft: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  dateText: { fontSize: 13, fontWeight: '600', color: '#666' },
-  timeText: { fontSize: 13, fontWeight: '700', color: '#CC0000' },
   teamsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -258,27 +283,7 @@ const styles = StyleSheet.create({
   },
   teamBox: { flex: 1, alignItems: 'center', gap: 6 },
   badge: { width: 44, height: 44 },
-  badgePlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeText: { fontSize: 10, fontWeight: 'bold', color: '#666' },
-  teamName: { fontSize: 13, fontWeight: '700', color: '#1A1A1A', textAlign: 'center' },
   vsText: { fontSize: 12, fontWeight: '900', color: '#BBB', marginHorizontal: 10 },
-  venueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  venueText: { fontSize: 12, color: '#888' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyText: { marginTop: 20, textAlign: 'center', fontSize: 16, color: '#999', lineHeight: 24 },
 });

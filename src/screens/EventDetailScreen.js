@@ -16,6 +16,7 @@ import {
   removeFavorite,
   subscribe,
 } from "../services/favoritesStore";
+import { useTheme } from "../context/ThemeContext";
 
 export default function EventDetailScreen({ event, onBack }) {
   const [detail, setDetail] = useState(null);
@@ -23,6 +24,7 @@ export default function EventDetailScreen({ event, onBack }) {
   const [loading, setLoading] = useState(true);
   const [homeIsFav, setHomeIsFav] = useState(isFavorite(event.homeTeam));
   const [awayIsFav, setAwayIsFav] = useState(isFavorite(event.awayTeam));
+  const { colors, dark } = useTheme();
 
   useEffect(() => {
     const unsubscribe = subscribe(() => {
@@ -64,9 +66,50 @@ export default function EventDetailScreen({ event, onBack }) {
     }
   };
 
+  const dynamicStyles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    backBtn: { padding: 20, paddingTop: 50, backgroundColor: colors.primary },
+    matchHeader: {
+      backgroundColor: colors.primary,
+      padding: 20,
+      alignItems: "center",
+    },
+    section: {
+      backgroundColor: colors.card,
+      margin: 15,
+      marginBottom: 0,
+      borderRadius: 12,
+      padding: 15,
+    },
+    sectionTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 12, color: colors.text },
+    goalsDivider: { width: 1, backgroundColor: colors.border },
+    goalEntry: { fontSize: 13, color: colors.text, opacity: 0.8, lineHeight: 20 },
+    cardEntry: { fontSize: 13, color: colors.text, opacity: 0.8, lineHeight: 20 },
+    statRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    statLabel: { flex: 1, textAlign: "center", fontSize: 13, color: colors.secondary },
+    statValue: {
+      width: 60,
+      textAlign: "center",
+      fontSize: 14,
+      fontWeight: "bold",
+      color: colors.primary,
+    },
+    noStats: { fontSize: 13, color: colors.secondary, textAlign: "center", paddingVertical: 10 },
+    infoText: { fontSize: 14, color: colors.text, opacity: 0.8, paddingVertical: 6 },
+  });
+
   if (loading)
     return (
-      <ActivityIndicator size="large" color="#CC0000" style={{ flex: 1 }} />
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
     );
 
   const validStats = stats && Array.isArray(stats)
@@ -74,12 +117,12 @@ export default function EventDetailScreen({ event, onBack }) {
     : [];
 
   return (
-    <ScrollView style={styles.container}>
-      <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+    <ScrollView style={dynamicStyles.container}>
+      <TouchableOpacity style={dynamicStyles.backBtn} onPress={onBack}>
         <Text style={styles.backText}>← Volver</Text>
       </TouchableOpacity>
 
-      <View style={styles.matchHeader}>
+      <View style={dynamicStyles.matchHeader}>
         <Text style={styles.leagueInfo}>
           {event.league} • {event.dateEvent || detail?.dateEvent || ""}
         </Text>
@@ -133,18 +176,18 @@ export default function EventDetailScreen({ event, onBack }) {
 
       {/* Goleadores */}
       {(event.homeGoals || event.awayGoals) && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Goleadores</Text>
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Goleadores</Text>
           <View style={styles.goalsContainer}>
             <View style={styles.goalsSide}>
               {(event.homeGoals || "").split(";").filter(Boolean).map((g, i) => (
-                <Text key={i} style={styles.goalEntry}>⚽ {g.trim()}</Text>
+                <Text key={i} style={dynamicStyles.goalEntry}>⚽ {g.trim()}</Text>
               ))}
             </View>
-            <View style={styles.goalsDivider} />
+            <View style={dynamicStyles.goalsDivider} />
             <View style={styles.goalsSide}>
               {(event.awayGoals || "").split(";").filter(Boolean).map((g, i) => (
-                <Text key={i} style={styles.goalEntry}>⚽ {g.trim()}</Text>
+                <Text key={i} style={dynamicStyles.goalEntry}>⚽ {g.trim()}</Text>
               ))}
             </View>
           </View>
@@ -154,24 +197,24 @@ export default function EventDetailScreen({ event, onBack }) {
       {/* Tarjetas */}
       {(event.homeRedCards || event.awayRedCards ||
         event.homeYellowCards || event.awayYellowCards) && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tarjetas</Text>
+        <View style={dynamicStyles.section}>
+          <Text style={dynamicStyles.sectionTitle}>Tarjetas</Text>
           <View style={styles.goalsContainer}>
             <View style={styles.goalsSide}>
               {(event.homeYellowCards || "").split(";").filter(Boolean).map((p, i) => (
-                <Text key={i} style={styles.cardEntry}>🟨 {p.trim()}</Text>
+                <Text key={i} style={dynamicStyles.cardEntry}>🟨 {p.trim()}</Text>
               ))}
               {(event.homeRedCards || "").split(";").filter(Boolean).map((p, i) => (
-                <Text key={i} style={styles.cardEntry}>🟥 {p.trim()}</Text>
+                <Text key={i} style={dynamicStyles.cardEntry}>🟥 {p.trim()}</Text>
               ))}
             </View>
-            <View style={styles.goalsDivider} />
+            <View style={dynamicStyles.goalsDivider} />
             <View style={styles.goalsSide}>
               {(event.awayYellowCards || "").split(";").filter(Boolean).map((p, i) => (
-                <Text key={i} style={styles.cardEntry}>🟨 {p.trim()}</Text>
+                <Text key={i} style={dynamicStyles.cardEntry}>🟨 {p.trim()}</Text>
               ))}
               {(event.awayRedCards || "").split(";").filter(Boolean).map((p, i) => (
-                <Text key={i} style={styles.cardEntry}>🟥 {p.trim()}</Text>
+                <Text key={i} style={dynamicStyles.cardEntry}>🟥 {p.trim()}</Text>
               ))}
             </View>
           </View>
@@ -189,32 +232,32 @@ export default function EventDetailScreen({ event, onBack }) {
       )}
 
       {/* Estadísticas */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Estadísticas</Text>
+      <View style={dynamicStyles.section}>
+        <Text style={dynamicStyles.sectionTitle}>Estadísticas</Text>
         {validStats.length > 0 ? (
           validStats.map((stat, index) => (
-            <View key={index} style={styles.statRow}>
-              <Text style={styles.statValue}>{stat.strHomeTeamStat ?? "-"}</Text>
-              <Text style={styles.statLabel}>{stat.strStat}</Text>
-              <Text style={styles.statValue}>{stat.strAwayTeamStat ?? "-"}</Text>
+            <View key={index} style={dynamicStyles.statRow}>
+              <Text style={dynamicStyles.statValue}>{stat.strHomeTeamStat ?? "-"}</Text>
+              <Text style={dynamicStyles.statLabel}>{stat.strStat}</Text>
+              <Text style={dynamicStyles.statValue}>{stat.strAwayTeamStat ?? "-"}</Text>
             </View>
           ))
         ) : (
-          <Text style={styles.noStats}>No hay estadísticas disponibles para este partido.</Text>
+          <Text style={dynamicStyles.noStats}>No hay estadísticas disponibles para este partido.</Text>
         )}
       </View>
 
       {/* Info extra */}
-      <View style={[styles.section, { marginBottom: 20 }]}>
-        <Text style={styles.sectionTitle}>Información</Text>
+      <View style={[dynamicStyles.section, { marginBottom: 20 }]}>
+        <Text style={dynamicStyles.sectionTitle}>Información</Text>
         {(event.venue || detail?.strVenue) ? (
-          <Text style={styles.infoText}>🏟️ {event.venue || detail.strVenue}</Text>
+          <Text style={dynamicStyles.infoText}>🏟️ {event.venue || detail.strVenue}</Text>
         ) : null}
         {detail?.strReferee ? (
-          <Text style={styles.infoText}>👤 Árbitro: {detail.strReferee}</Text>
+          <Text style={dynamicStyles.infoText}>👤 Árbitro: {detail.strReferee}</Text>
         ) : null}
         {detail?.intSpectators ? (
-          <Text style={styles.infoText}>👥 Espectadores: {detail.intSpectators}</Text>
+          <Text style={dynamicStyles.infoText}>👥 Espectadores: {detail.intSpectators}</Text>
         ) : null}
       </View>
     </ScrollView>
@@ -222,14 +265,7 @@ export default function EventDetailScreen({ event, onBack }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  backBtn: { padding: 20, paddingTop: 50, backgroundColor: "#CC0000" },
   backText: { color: "rgba(255,255,255,0.9)", fontSize: 16, fontWeight: "600" },
-  matchHeader: {
-    backgroundColor: "#CC0000",
-    padding: 20,
-    alignItems: "center",
-  },
   leagueInfo: { color: "rgba(255,255,255,0.8)", fontSize: 13, marginBottom: 4 },
   seasonText: { color: "rgba(255,255,255,0.6)", fontSize: 12, marginBottom: 16 },
   teamsRow: { flexDirection: "row", alignItems: "center", width: "100%" },
@@ -247,36 +283,8 @@ const styles = StyleSheet.create({
   scoreCenter: { alignItems: "center", paddingHorizontal: 10 },
   bigScore: { color: "#fff", fontSize: 42, fontWeight: "bold" },
   finalText: { color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 4 },
-  section: {
-    backgroundColor: "#fff",
-    margin: 15,
-    marginBottom: 0,
-    borderRadius: 12,
-    padding: 15,
-  },
-  sectionTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 12, color: "#333" },
   goalsContainer: { flexDirection: "row", gap: 10 },
   goalsSide: { flex: 1, gap: 4 },
-  goalsDivider: { width: 1, backgroundColor: "#f0f0f0" },
-  goalEntry: { fontSize: 13, color: "#444", lineHeight: 20 },
-  cardEntry: { fontSize: 13, color: "#444", lineHeight: 20 },
-  statRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  statLabel: { flex: 1, textAlign: "center", fontSize: 13, color: "#666" },
-  statValue: {
-    width: 60,
-    textAlign: "center",
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#CC0000",
-  },
-  noStats: { fontSize: 13, color: "#999", textAlign: "center", paddingVertical: 10 },
   highlightsBtn: {
     backgroundColor: "#FF0000",
     marginHorizontal: 15,
@@ -287,5 +295,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   highlightsBtnText: { color: "#fff", fontSize: 15, fontWeight: "bold" },
-  infoText: { fontSize: 14, color: "#555", paddingVertical: 6 },
 });

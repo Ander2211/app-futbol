@@ -8,6 +8,7 @@ import {
   Alert,
   Image,
   Platform,
+  Switch,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
@@ -18,6 +19,7 @@ import {
   subscribe,
 } from "../services/favoritesStore";
 import { getTeamBadge } from "../services/sportsApi";
+import { useTheme } from "../context/ThemeContext";
 
 const BASE_URL = "https://www.thesportsdb.com/api/v1/json/3";
 
@@ -33,6 +35,7 @@ const LEAGUES = [
 ];
 
 export default function PerfilScreen({ onLogout }) {
+  const { dark, colors, toggleTheme } = useTheme();
   const [favorites, setFavorites] = useState(getFavorites());
   const [showSuggested, setShowSuggested] = useState(false);
   const [availableTeams, setAvailableTeams] = useState([]);
@@ -217,49 +220,151 @@ export default function PerfilScreen({ onLogout }) {
     );
   };
 
+  const dynamicStyles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    profileSection: {
+      alignItems: "center",
+      backgroundColor: colors.card,
+      paddingVertical: 24,
+    },
+    avatar: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: dark ? "#333" : "#f0f0f0",
+      justifyContent: "center",
+      alignItems: "center",
+      overflow: "hidden",
+      borderWidth: 3,
+      borderColor: colors.primary,
+    },
+    cameraIconContainer: {
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      backgroundColor: colors.primary,
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 2,
+      borderColor: colors.card,
+    },
+    userName: { fontSize: 20, fontWeight: "bold", color: colors.text },
+    userEmail: { fontSize: 14, color: colors.secondary, marginTop: 4 },
+    statBox: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      padding: 20,
+      alignItems: "center",
+    },
+    section: {
+      backgroundColor: colors.card,
+      margin: 15,
+      borderRadius: 12,
+      padding: 15,
+    },
+    sectionTitle: { fontSize: 16, fontWeight: "bold", color: colors.text },
+    addBtn: { color: colors.primary, fontWeight: "600", fontSize: 15 },
+    emptyText: {
+      color: colors.secondary,
+      fontSize: 14,
+      textAlign: "center",
+      paddingVertical: 16,
+      lineHeight: 22,
+    },
+    teamRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    teamBadge: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 12,
+    },
+    teamName: { fontSize: 15, fontWeight: "600", color: colors.text },
+    teamLeague: { fontSize: 13, color: colors.secondary, marginTop: 2 },
+    chevron: { fontSize: 22, color: colors.secondary },
+    suggestedBox: {
+      marginTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: 12,
+    },
+    notifText: { fontSize: 15, color: colors.text },
+    logoutBtn: {
+      marginTop: 12,
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+    },
+  });
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.profileSection}>
+    <ScrollView style={dynamicStyles.container}>
+      <View style={dynamicStyles.profileSection}>
         <TouchableOpacity style={styles.avatarContainer} onPress={handlePickImage}>
-          <View style={styles.avatar}>
+          <View style={dynamicStyles.avatar}>
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.profileImage} />
             ) : (
               <Text style={styles.avatarText}>👤</Text>
             )}
           </View>
-          <View style={styles.cameraIconContainer}>
+          <View style={dynamicStyles.cameraIconContainer}>
             <Text style={styles.cameraIcon}>📷</Text>
           </View>
         </TouchableOpacity>
-        <Text style={styles.userName}>Ander (DPS)</Text>
-        <Text style={styles.userEmail}>ander.dps@email.com</Text>
-        <TouchableOpacity style={styles.logoutBtn} onPress={() => onLogout?.()}>
+        <Text style={dynamicStyles.userName}>Ander (DPS)</Text>
+        <Text style={dynamicStyles.userEmail}>ander.dps@email.com</Text>
+        <TouchableOpacity style={dynamicStyles.logoutBtn} onPress={() => onLogout?.()}>
           <Text style={styles.logoutText}>Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.statsRow}>
-        <View style={styles.statBox}>
+        <View style={dynamicStyles.statBox}>
           <Text style={styles.statNumber}>{favorites.length}</Text>
           <Text style={styles.statLabel}>Equipos{"\n"}Favoritos</Text>
         </View>
-        <View style={styles.statBox}>
+        <View style={dynamicStyles.statBox}>
           <Text style={styles.statNumber}>47</Text>
           <Text style={styles.statLabel}>Partidos{"\n"}Seguidos</Text>
         </View>
       </View>
 
-      <View style={styles.section}>
+      <View style={dynamicStyles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>⭐ Equipos Favoritos</Text>
+          <Text style={dynamicStyles.sectionTitle}>🌙 Modo Oscuro</Text>
+          <Switch
+            value={dark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: "#767577", true: colors.primary }}
+            thumbColor={dark ? "#fff" : "#f4f3f4"}
+          />
+        </View>
+      </View>
+
+      <View style={dynamicStyles.section}>
+        <View style={styles.sectionHeader}>
+          <Text style={dynamicStyles.sectionTitle}>⭐ Equipos Favoritos</Text>
           <TouchableOpacity onPress={() => setShowSuggested(!showSuggested)}>
-            <Text style={styles.addBtn}>+ Agregar</Text>
+            <Text style={dynamicStyles.addBtn}>+ Agregar</Text>
           </TouchableOpacity>
         </View>
 
         {favorites.length === 0 && (
-          <Text style={styles.emptyText}>
+          <Text style={dynamicStyles.emptyText}>
             No tienes equipos favoritos aún.{"\n"}Agrégalos desde los partidos
             ⭐
           </Text>
@@ -268,10 +373,10 @@ export default function PerfilScreen({ onLogout }) {
         {favorites.map((team) => (
           <TouchableOpacity
             key={team.id}
-            style={styles.teamRow}
+            style={dynamicStyles.teamRow}
             onLongPress={() => handleRemove(team.id)}
           >
-            <View style={styles.teamBadge}>
+            <View style={dynamicStyles.teamBadge}>
               {badges[team.id] ? (
                 <Image
                   source={{ uri: badges[team.id] }}
@@ -283,15 +388,15 @@ export default function PerfilScreen({ onLogout }) {
               )}
             </View>
             <View style={styles.teamInfo}>
-              <Text style={styles.teamName}>{team.name}</Text>
-              <Text style={styles.teamLeague}>{team.league}</Text>
+              <Text style={dynamicStyles.teamName}>{team.name}</Text>
+              <Text style={dynamicStyles.teamLeague}>{team.league}</Text>
             </View>
-            <Text style={styles.chevron}>›</Text>
+            <Text style={dynamicStyles.chevron}>›</Text>
           </TouchableOpacity>
         ))}
 
         {showSuggested && (
-          <View style={styles.suggestedBox}>
+          <View style={dynamicStyles.suggestedBox}>
             <Text style={styles.suggestedTitle}>Equipos disponibles</Text>
             {availableTeams
               .filter((t) => !favorites.find((f) => f.id === t.id))
@@ -304,7 +409,7 @@ export default function PerfilScreen({ onLogout }) {
                     setShowSuggested(false);
                   }}
                 >
-                  <View style={styles.teamBadge}>
+                  <View style={dynamicStyles.teamBadge}>
                     {availableBadges[team.id] ? (
                       <Image
                         source={{ uri: availableBadges[team.id] }}
@@ -316,8 +421,8 @@ export default function PerfilScreen({ onLogout }) {
                     )}
                   </View>
                   <View style={styles.teamInfo}>
-                    <Text style={styles.teamName}>{team.name}</Text>
-                    <Text style={styles.teamLeague}>{team.league}</Text>
+                    <Text style={dynamicStyles.teamName}>{team.name}</Text>
+                    <Text style={dynamicStyles.teamLeague}>{team.league}</Text>
                   </View>
                   <Text style={styles.addIcon}>+</Text>
                 </TouchableOpacity>
@@ -326,10 +431,10 @@ export default function PerfilScreen({ onLogout }) {
         )}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔔 Notificaciones</Text>
+      <View style={dynamicStyles.section}>
+        <Text style={dynamicStyles.sectionTitle}>🔔 Notificaciones</Text>
         <View style={styles.notifRow}>
-          <Text style={styles.notifText}>Resultados en vivo</Text>
+          <Text style={dynamicStyles.notifText}>Resultados en vivo</Text>
           <View style={styles.toggleOn}>
             <Text style={styles.toggleText}>ON</Text>
           </View>
@@ -340,62 +445,23 @@ export default function PerfilScreen({ onLogout }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
-  profileSection: {
-    alignItems: "center",
-    backgroundColor: "#fff",
-    paddingVertical: 24,
-  },
   avatarContainer: {
     position: "relative",
     marginBottom: 12,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    borderWidth: 3,
-    borderColor: "#f4511e",
   },
   profileImage: {
     width: "100%",
     height: "100%",
   },
-  cameraIconContainer: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: "#f4511e",
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
   cameraIcon: {
     fontSize: 14,
   },
   avatarText: { fontSize: 36 },
-  userName: { fontSize: 20, fontWeight: "bold", color: "#333" },
-  userEmail: { fontSize: 14, color: "#999", marginTop: 4 },
   statsRow: {
     flexDirection: "row",
     marginHorizontal: 15,
     marginTop: 15,
     gap: 15,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: "#f4511e",
-    borderRadius: 12,
-    padding: 20,
-    alignItems: "center",
   },
   statNumber: { fontSize: 28, fontWeight: "bold", color: "#fff" },
   statLabel: {
@@ -404,55 +470,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 4,
   },
-  section: {
-    backgroundColor: "#fff",
-    margin: 15,
-    borderRadius: 12,
-    padding: 15,
-  },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "bold", color: "#333" },
-  addBtn: { color: "#f4511e", fontWeight: "600", fontSize: 15 },
-  emptyText: {
-    color: "#999",
-    fontSize: 14,
-    textAlign: "center",
-    paddingVertical: 16,
-    lineHeight: 22,
-  },
-  teamRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  teamBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#f4511e",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
   teamBadgeText: { color: "#fff", fontWeight: "bold", fontSize: 11 },
   badgeImage: { width: 34, height: 34 },
   teamInfo: { flex: 1 },
-  teamName: { fontSize: 15, fontWeight: "600", color: "#333" },
-  teamLeague: { fontSize: 13, color: "#999", marginTop: 2 },
-  chevron: { fontSize: 22, color: "#ccc" },
-  suggestedBox: {
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    paddingTop: 12,
-  },
   suggestedTitle: { fontSize: 13, color: "#999", marginBottom: 8 },
   suggestedRow: {
     flexDirection: "row",
@@ -466,19 +492,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
   },
-  notifText: { fontSize: 15, color: "#333" },
   toggleOn: {
     backgroundColor: "#f4511e",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
-  },
-  logoutBtn: {
-    marginTop: 12,
-    backgroundColor: "#f4511e",
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
   },
   logoutText: {
     color: "#fff",
