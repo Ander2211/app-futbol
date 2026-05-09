@@ -250,4 +250,13 @@ Favoritos por defecto: Manchester United, Real Madrid.
 
 ## Rama de desarrollo
 
-El trabajo activo se realiza en la rama `guille`.
+## Base de Datos de Supabase 
+
+La pueden usar para guardar favoritos, foto de perfil y usuarios en la tabla de supabase  `users` esta de assets user.png
+
+
+### Ejemplos útiles a consumir:
+- Listar todos los equipos en una liga (Ejem: English Premier League):
+  `https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=English%20Premier%20League`
+- Calendario de próximos 15 partidos por Equipo (Ejem. Id 133604: Arsenal):
+  `https://www.thesportsdb.com/api/v1/json/3/eventsnext.php?id=133604`
