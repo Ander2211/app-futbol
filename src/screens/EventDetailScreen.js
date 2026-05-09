@@ -7,8 +7,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Linking,
 } from "react-native";
-import { getEventDetail, getEventStats, getTeamBadge } from "../services/sportsApi";
+import { getEventDetail, getEventStats } from "../services/sportsApi";
 import {
   isFavorite,
   addFavorite,
@@ -22,7 +23,6 @@ export default function EventDetailScreen({ event, onBack }) {
   const [loading, setLoading] = useState(true);
   const [homeIsFav, setHomeIsFav] = useState(isFavorite(event.homeTeam));
   const [awayIsFav, setAwayIsFav] = useState(isFavorite(event.awayTeam));
-  const [badges, setBadges] = useState({});
 
   useEffect(() => {
     const unsubscribe = subscribe(() => {
@@ -47,19 +47,8 @@ export default function EventDetailScreen({ event, onBack }) {
         setLoading(false);
       }
     };
-    
-    const fetchBadges = async () => {
-      const newBadges = {};
-      const homeImg = await getTeamBadge(event.homeTeam);
-      const awayImg = await getTeamBadge(event.awayTeam);
-      if (homeImg) newBadges[event.homeTeam] = homeImg;
-      if (awayImg) newBadges[event.awayTeam] = awayImg;
-      setBadges(newBadges);
-    };
-
     fetchDetail();
-    fetchBadges();
-  }, [event.id, event.homeTeam, event.awayTeam]);
+  }, [event.id]);
 
   const toggleFavorite = (teamName, league) => {
     const team = {
@@ -80,6 +69,10 @@ export default function EventDetailScreen({ event, onBack }) {
       <ActivityIndicator size="large" color="#CC0000" style={{ flex: 1 }} />
     );
 
+  const validStats = stats && Array.isArray(stats)
+    ? stats.filter(s => s.strHomeTeamStat || s.strAwayTeamStat)
+    : [];
+
   return (
     <ScrollView style={styles.container}>
       <TouchableOpacity style={styles.backBtn} onPress={onBack}>
@@ -88,14 +81,16 @@ export default function EventDetailScreen({ event, onBack }) {
 
       <View style={styles.matchHeader}>
         <Text style={styles.leagueInfo}>
-          {event.league} • {detail?.dateEvent || ""}
+          {event.league} • {event.dateEvent || detail?.dateEvent || ""}
         </Text>
+        {event.season && (
+          <Text style={styles.seasonText}>Temporada {event.season}</Text>
+        )}
 
         <View style={styles.teamsRow}>
-          {/* Equipo local */}
           <View style={styles.teamBox}>
-            {badges[event.homeTeam] ? (
-              <Image source={{ uri: badges[event.homeTeam] }} style={styles.badgeImage} resizeMode="contain" />
+            {event.homeBadge ? (
+              <Image source={{ uri: event.homeBadge }} style={styles.badgeImage} resizeMode="contain" />
             ) : (
               <Text style={styles.teamCode}>
                 {event.homeTeam.substring(0, 3).toUpperCase()}
@@ -110,7 +105,6 @@ export default function EventDetailScreen({ event, onBack }) {
             </TouchableOpacity>
           </View>
 
-          {/* Marcador */}
           <View style={styles.scoreCenter}>
             <Text style={styles.bigScore}>
               {event.homeScore} - {event.awayScore}
@@ -118,10 +112,9 @@ export default function EventDetailScreen({ event, onBack }) {
             <Text style={styles.finalText}>Finalizado</Text>
           </View>
 
-          {/* Equipo visitante */}
           <View style={styles.teamBox}>
-            {badges[event.awayTeam] ? (
-              <Image source={{ uri: badges[event.awayTeam] }} style={styles.badgeImage} resizeMode="contain" />
+            {event.awayBadge ? (
+              <Image source={{ uri: event.awayBadge }} style={styles.badgeImage} resizeMode="contain" />
             ) : (
               <Text style={styles.teamCode}>
                 {event.awayTeam.substring(0, 3).toUpperCase()}
@@ -138,37 +131,90 @@ export default function EventDetailScreen({ event, onBack }) {
         </View>
       </View>
 
-      {/* Estadísticas */}
-      {stats && Array.isArray(stats) && stats.length > 0 && (
+      {/* Goleadores */}
+      {(event.homeGoals || event.awayGoals) && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Estadísticas</Text>
-          {stats.map((stat, index) => (
-            <View key={index} style={styles.statRow}>
-              <Text style={styles.statValue}>
-                {stat.strHomeTeamStat ?? "-"}
-              </Text>
-              <Text style={styles.statLabel}>{stat.strStat}</Text>
-              <Text style={styles.statValue}>
-                {stat.strAwayTeamStat ?? "-"}
-              </Text>
+          <Text style={styles.sectionTitle}>Goleadores</Text>
+          <View style={styles.goalsContainer}>
+            <View style={styles.goalsSide}>
+              {(event.homeGoals || "").split(";").filter(Boolean).map((g, i) => (
+                <Text key={i} style={styles.goalEntry}>⚽ {g.trim()}</Text>
+              ))}
             </View>
-          ))}
+            <View style={styles.goalsDivider} />
+            <View style={styles.goalsSide}>
+              {(event.awayGoals || "").split(";").filter(Boolean).map((g, i) => (
+                <Text key={i} style={styles.goalEntry}>⚽ {g.trim()}</Text>
+              ))}
+            </View>
+          </View>
         </View>
       )}
 
-      {/* Info extra */}
+      {/* Tarjetas */}
+      {(event.homeRedCards || event.awayRedCards ||
+        event.homeYellowCards || event.awayYellowCards) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tarjetas</Text>
+          <View style={styles.goalsContainer}>
+            <View style={styles.goalsSide}>
+              {(event.homeYellowCards || "").split(";").filter(Boolean).map((p, i) => (
+                <Text key={i} style={styles.cardEntry}>🟨 {p.trim()}</Text>
+              ))}
+              {(event.homeRedCards || "").split(";").filter(Boolean).map((p, i) => (
+                <Text key={i} style={styles.cardEntry}>🟥 {p.trim()}</Text>
+              ))}
+            </View>
+            <View style={styles.goalsDivider} />
+            <View style={styles.goalsSide}>
+              {(event.awayYellowCards || "").split(";").filter(Boolean).map((p, i) => (
+                <Text key={i} style={styles.cardEntry}>🟨 {p.trim()}</Text>
+              ))}
+              {(event.awayRedCards || "").split(";").filter(Boolean).map((p, i) => (
+                <Text key={i} style={styles.cardEntry}>🟥 {p.trim()}</Text>
+              ))}
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Highlights de TheSportsDB */}
+      {detail?.strVideo && (
+        <TouchableOpacity
+          style={styles.highlightsBtn}
+          onPress={() => Linking.openURL(detail.strVideo)}
+        >
+          <Text style={styles.highlightsBtnText}>▶ Ver highlights en YouTube</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Estadísticas */}
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Estadísticas</Text>
+        {validStats.length > 0 ? (
+          validStats.map((stat, index) => (
+            <View key={index} style={styles.statRow}>
+              <Text style={styles.statValue}>{stat.strHomeTeamStat ?? "-"}</Text>
+              <Text style={styles.statLabel}>{stat.strStat}</Text>
+              <Text style={styles.statValue}>{stat.strAwayTeamStat ?? "-"}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noStats}>No hay estadísticas disponibles para este partido.</Text>
+        )}
+      </View>
+
+      {/* Info extra */}
+      <View style={[styles.section, { marginBottom: 20 }]}>
         <Text style={styles.sectionTitle}>Información</Text>
-        {detail?.strVenue ? (
-          <Text style={styles.infoText}>🏟️ {detail.strVenue}</Text>
+        {(event.venue || detail?.strVenue) ? (
+          <Text style={styles.infoText}>🏟️ {event.venue || detail.strVenue}</Text>
         ) : null}
         {detail?.strReferee ? (
           <Text style={styles.infoText}>👤 Árbitro: {detail.strReferee}</Text>
         ) : null}
         {detail?.intSpectators ? (
-          <Text style={styles.infoText}>
-            👥 Espectadores: {detail.intSpectators}
-          </Text>
+          <Text style={styles.infoText}>👥 Espectadores: {detail.intSpectators}</Text>
         ) : null}
       </View>
     </ScrollView>
@@ -184,11 +230,8 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
   },
-  leagueInfo: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 13,
-    marginBottom: 20,
-  },
+  leagueInfo: { color: "rgba(255,255,255,0.8)", fontSize: 13, marginBottom: 4 },
+  seasonText: { color: "rgba(255,255,255,0.6)", fontSize: 12, marginBottom: 16 },
   teamsRow: { flexDirection: "row", alignItems: "center", width: "100%" },
   teamBox: { flex: 1, alignItems: "center" },
   badgeImage: { width: 60, height: 60, marginBottom: 5 },
@@ -207,15 +250,16 @@ const styles = StyleSheet.create({
   section: {
     backgroundColor: "#fff",
     margin: 15,
+    marginBottom: 0,
     borderRadius: 12,
     padding: 15,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 12,
-    color: "#333",
-  },
+  sectionTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 12, color: "#333" },
+  goalsContainer: { flexDirection: "row", gap: 10 },
+  goalsSide: { flex: 1, gap: 4 },
+  goalsDivider: { width: 1, backgroundColor: "#f0f0f0" },
+  goalEntry: { fontSize: 13, color: "#444", lineHeight: 20 },
+  cardEntry: { fontSize: 13, color: "#444", lineHeight: 20 },
   statRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -232,5 +276,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#CC0000",
   },
+  noStats: { fontSize: 13, color: "#999", textAlign: "center", paddingVertical: 10 },
+  highlightsBtn: {
+    backgroundColor: "#FF0000",
+    marginHorizontal: 15,
+    marginBottom: 0,
+    marginTop: 15,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+  },
+  highlightsBtnText: { color: "#fff", fontSize: 15, fontWeight: "bold" },
   infoText: { fontSize: 14, color: "#555", paddingVertical: 6 },
 });

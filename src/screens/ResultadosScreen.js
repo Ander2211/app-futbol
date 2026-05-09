@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   FlatList,
   Image,
+  TextInput,
 } from "react-native";
 import EventDetailScreen from "./EventDetailScreen";
 
@@ -33,20 +34,13 @@ const SPORTS = [
   "Hockey",
 ];
 
-const getTeamBadge = async (teamName) => {
-  const res = await fetch(
-    `${BASE_URL}/searchteams.php?t=${encodeURIComponent(teamName)}`,
-  );
-  const data = await res.json();
-  return data.teams?.[0]?.strBadge || null;
-};
-
 export default function ResultadosScreen() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState("Todos");
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [badges, setBadges] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState(null);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -63,6 +57,17 @@ export default function ResultadosScreen() {
               awayTeam: e.strAwayTeam,
               homeScore: e.intHomeScore,
               awayScore: e.intAwayScore,
+              homeBadge: e.strHomeTeamBadge || null,
+              awayBadge: e.strAwayTeamBadge || null,
+              dateEvent: e.dateEvent || null,
+              season: e.strSeason || null,
+              homeGoals: e.strHomeGoalDetails || null,
+              awayGoals: e.strAwayGoalDetails || null,
+              homeRedCards: e.strHomeRedCards || null,
+              awayRedCards: e.strAwayRedCards || null,
+              homeYellowCards: e.strHomeYellowCards || null,
+              awayYellowCards: e.strAwayYellowCards || null,
+              venue: e.strVenue || null,
               status: "Finalizado",
               league: l.name,
               sport: l.sport,
@@ -79,22 +84,16 @@ export default function ResultadosScreen() {
     fetchAll();
   }, []);
 
-  useEffect(() => {
-    const fetchBadges = async () => {
-      const newBadges = {};
-      const teamNames = [
-        ...new Set(events.flatMap((e) => [e.homeTeam, e.awayTeam])),
-      ];
-      await Promise.all(
-        teamNames.map(async (name) => {
-          const url = await getTeamBadge(name);
-          if (url) newBadges[name] = url;
-        }),
-      );
-      setBadges(newBadges);
-    };
-    if (events.length > 0) fetchBadges();
+  const allTeams = useMemo(() => {
+    const names = new Set(events.flatMap(e => [e.homeTeam, e.awayTeam]));
+    return [...names].sort();
   }, [events]);
+
+  const suggestions = useMemo(() => {
+    if (!searchQuery.trim() || selectedTeam) return [];
+    const q = searchQuery.toLowerCase();
+    return allTeams.filter(t => t.toLowerCase().includes(q)).slice(0, 6);
+  }, [searchQuery, selectedTeam, allTeams]);
 
   if (selectedEvent) {
     return (
@@ -105,10 +104,11 @@ export default function ResultadosScreen() {
     );
   }
 
-  const filtered =
-    selectedSport === "Todos"
-      ? events
-      : events.filter((e) => e.sport === selectedSport);
+  const filtered = events.filter(e => {
+    if (selectedSport !== "Todos" && e.sport !== selectedSport) return false;
+    if (selectedTeam) return e.homeTeam === selectedTeam || e.awayTeam === selectedTeam;
+    return true;
+  });
 
   const grouped = filtered.reduce((acc, event) => {
     if (!acc[event.league]) acc[event.league] = [];
@@ -123,12 +123,6 @@ export default function ResultadosScreen() {
 
   return (
     <View style={styles.container}>
-      {/* We remove header as Tab navigation or Stack navigation might have their own, 
-          but actually let's keep it here because APPi doesn't have a header. */}
-      {/* <View style={styles.header}>
-        <Text style={styles.headerTitle}>Resultados</Text>
-      </View> */}
-
       <View style={styles.filtersWrapper}>
         <ScrollView
           horizontal
@@ -157,6 +151,52 @@ export default function ResultadosScreen() {
         </ScrollView>
       </View>
 
+      {/* Barra de búsqueda */}
+      <View style={styles.searchWrapper}>
+        <View style={styles.searchRow}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar equipo..."
+            placeholderTextColor="#aaa"
+            value={searchQuery}
+            onChangeText={text => {
+              setSearchQuery(text);
+              if (selectedTeam) setSelectedTeam(null);
+            }}
+          />
+          {(searchQuery.length > 0 || selectedTeam) && (
+            <TouchableOpacity
+              style={styles.clearBtn}
+              onPress={() => { setSearchQuery(""); setSelectedTeam(null); }}
+            >
+              <Text style={styles.clearBtnText}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Chip del equipo seleccionado */}
+        {selectedTeam && (
+          <View style={styles.selectedTeamChip}>
+            <Text style={styles.selectedTeamText}>{selectedTeam}</Text>
+          </View>
+        )}
+
+        {/* Sugerencias */}
+        {suggestions.length > 0 && (
+          <View style={styles.suggestions}>
+            {suggestions.map(team => (
+              <TouchableOpacity
+                key={team}
+                style={styles.suggestionItem}
+                onPress={() => { setSelectedTeam(team); setSearchQuery(team); }}
+              >
+                <Text style={styles.suggestionText}>{team}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
       <FlatList
         data={Object.keys(grouped)}
         keyExtractor={(item) => item}
@@ -169,46 +209,94 @@ export default function ResultadosScreen() {
                 style={styles.card}
                 onPress={() => setSelectedEvent(event)}
               >
-                <View style={styles.teamBox}>
-                  {badges[event.homeTeam] ? (
-                    <Image
-                      source={{ uri: badges[event.homeTeam] }}
-                      style={styles.badgeImage}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <View style={styles.badgePlaceholder}>
-                      <Text style={styles.badgeText}>
-                        {event.homeTeam.substring(0, 3).toUpperCase()}
-                      </Text>
-                    </View>
+                {/* Fecha y temporada */}
+                <View style={styles.cardHeader}>
+                  {event.dateEvent && (
+                    <Text style={styles.cardDate}>{event.dateEvent}</Text>
                   )}
-                  <Text style={styles.teamName}>{event.homeTeam}</Text>
+                  {event.season && (
+                    <Text style={styles.cardSeason}>Temp. {event.season}</Text>
+                  )}
                 </View>
 
-                <View style={styles.scoreBox}>
-                  <Text style={styles.score}>
-                    {event.homeScore ?? "-"} - {event.awayScore ?? "-"}
-                  </Text>
-                  <Text style={styles.status}>{event.status}</Text>
+                {/* Equipos y marcador */}
+                <View style={styles.teamsRow}>
+                  <View style={styles.teamBox}>
+                    {event.homeBadge ? (
+                      <Image
+                        source={{ uri: event.homeBadge }}
+                        style={styles.badgeImage}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <View style={styles.badgePlaceholder}>
+                        <Text style={styles.badgeText}>
+                          {event.homeTeam.substring(0, 3).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                    <Text style={styles.teamName}>{event.homeTeam}</Text>
+                  </View>
+
+                  <View style={styles.scoreBox}>
+                    <Text style={styles.score}>
+                      {event.homeScore ?? "-"} - {event.awayScore ?? "-"}
+                    </Text>
+                    <Text style={styles.status}>{event.status}</Text>
+                  </View>
+
+                  <View style={styles.teamBox}>
+                    {event.awayBadge ? (
+                      <Image
+                        source={{ uri: event.awayBadge }}
+                        style={styles.badgeImage}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <View style={styles.badgePlaceholder}>
+                        <Text style={styles.badgeText}>
+                          {event.awayTeam.substring(0, 3).toUpperCase()}
+                        </Text>
+                      </View>
+                    )}
+                    <Text style={styles.teamName}>{event.awayTeam}</Text>
+                  </View>
                 </View>
 
-                <View style={styles.teamBox}>
-                  {badges[event.awayTeam] ? (
-                    <Image
-                      source={{ uri: badges[event.awayTeam] }}
-                      style={styles.badgeImage}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <View style={styles.badgePlaceholder}>
-                      <Text style={styles.badgeText}>
-                        {event.awayTeam.substring(0, 3).toUpperCase()}
-                      </Text>
+                {/* Goleadores */}
+                {(event.homeGoals || event.awayGoals) && (
+                  <View style={styles.goalsRow}>
+                    <Text style={styles.goalsText} numberOfLines={2}>
+                      {event.homeGoals || ""}
+                    </Text>
+                    <Text style={styles.goalsText} numberOfLines={2}>
+                      {event.awayGoals || ""}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Tarjetas */}
+                {(event.homeRedCards || event.awayRedCards ||
+                  event.homeYellowCards || event.awayYellowCards) && (
+                  <View style={styles.cardsRow}>
+                    <View style={styles.cardSide}>
+                      {event.homeYellowCards && (
+                        <Text style={styles.yellowCard}>🟨 {event.homeYellowCards}</Text>
+                      )}
+                      {event.homeRedCards && (
+                        <Text style={styles.redCard}>🟥 {event.homeRedCards}</Text>
+                      )}
                     </View>
-                  )}
-                  <Text style={styles.teamName}>{event.awayTeam}</Text>
-                </View>
+                    <View style={styles.cardSide}>
+                      {event.awayYellowCards && (
+                        <Text style={styles.yellowCard}>🟨 {event.awayYellowCards}</Text>
+                      )}
+                      {event.awayRedCards && (
+                        <Text style={styles.redCard}>🟥 {event.awayRedCards}</Text>
+                      )}
+                    </View>
+                  </View>
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -220,8 +308,6 @@ export default function ResultadosScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
-  header: { backgroundColor: "#CC0000", padding: 20, paddingTop: 50 },
-  headerTitle: { color: "#fff", fontSize: 22, fontWeight: "bold" },
   filtersWrapper: {
     backgroundColor: "#fff",
     height: 56,
@@ -246,6 +332,52 @@ const styles = StyleSheet.create({
   filterActive: { backgroundColor: "#CC0000" },
   filterText: { fontSize: 13, fontWeight: "600", color: "#666" },
   filterTextActive: { color: "#fff" },
+  searchWrapper: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 14,
+    color: "#333",
+  },
+  clearBtn: { padding: 4 },
+  clearBtnText: { color: "#aaa", fontSize: 16 },
+  selectedTeamChip: {
+    marginTop: 8,
+    alignSelf: "flex-start",
+    backgroundColor: "#CC0000",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  selectedTeamText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  suggestions: {
+    marginTop: 6,
+    borderRadius: 10,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  suggestionItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  suggestionText: { fontSize: 14, color: "#333" },
   leagueTitle: {
     paddingHorizontal: 15,
     paddingTop: 15,
@@ -260,6 +392,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 12,
     padding: 15,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  cardDate: { fontSize: 11, color: "#999" },
+  cardSeason: { fontSize: 11, color: "#CC0000", fontWeight: "600" },
+  teamsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -284,4 +425,23 @@ const styles = StyleSheet.create({
   scoreBox: { alignItems: "center", paddingHorizontal: 10 },
   score: { fontSize: 20, fontWeight: "bold", color: "#CC0000" },
   status: { fontSize: 11, color: "#999", marginTop: 2 },
+  goalsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    gap: 10,
+  },
+  goalsText: { flex: 1, fontSize: 11, color: "#555", lineHeight: 16 },
+  cardsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 6,
+    gap: 10,
+  },
+  cardSide: { flex: 1, gap: 2 },
+  yellowCard: { fontSize: 11, color: "#888" },
+  redCard: { fontSize: 11, color: "#888" },
 });
