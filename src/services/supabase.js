@@ -10,10 +10,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// 👇 CAMBIA ESTO: Ve a Settings → API en tu proyecto Supabase
+// URL del proyecto Supabase
 const SUPABASE_URL = 'https://nniwuhmhuokztiwaknoz.supabase.co';
 
-// 👇 CAMBIA ESTO: Es la "anon public" key (no la service_role!)
+// Llave anónima pública — segura para usar en la app
+// NUNCA uses la service_role key aquí, esa expone toda la BD
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaXd1aG1odW9renRpd2Frbm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTU1MjEsImV4cCI6MjA5MzEzMTUyMX0.gJvpGNkmGTTb_JwqgjMhkz-r3O1q82PqnMoGQpT7Zio';
 
 // Creamos y exportamos el cliente para usarlo en toda la app
