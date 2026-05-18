@@ -32,7 +32,8 @@
           "photosPermission": "La aplicación necesita acceso a tus fotos para cambiar la imagen de perfil.",
           "cameraPermission": "La aplicación necesita acceso a tu cámara para tomar una foto de perfil."
         }
-      ]
+      ],
+      "expo-secure-store"
     ]
   }
 }
