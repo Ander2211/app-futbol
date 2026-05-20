@@ -46,7 +46,7 @@ export default function ResultadosScreen() {
   const [filterOpen, setFilterOpen] = useState(false);
   const { colors, dark } = useTheme();
   const { width } = useWindowDimensions();
-  const isCompactFilter = width <= 360;
+  const isCompactFilter = width <= 620;
 
   useEffect(() => {
     const fetchAll = async () => {

@@ -423,7 +423,7 @@ export default function EstadiosScreen() {
   const [filterOpen, setFilterOpen] = useState(false);
   const { colors, dark } = useTheme();
   const { width } = useWindowDimensions();
-  const isCompactFilter = width <= 360;
+  const isCompactFilter = width <= 620;
 
   useEffect(() => {
     const fetchStadiums = async () => {
@@ -818,7 +818,7 @@ export default function EstadiosScreen() {
               onPress={() => setFilterOpen((prev) => !prev)}
             >
               <Text style={dynamicStyles.filterToggleText}>
-                {filterOpen ? "Ocultar filtros" : "Mostrar filtros"}
+                {selectedSport !== "Todos" ? `Deporte: ${selectedSport}` : "Filtrar por deporte"}
               </Text>
               <Text style={dynamicStyles.filterToggleText}>{filterOpen ? "−" : "+"}</Text>
             </TouchableOpacity>
