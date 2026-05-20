@@ -8,10 +8,12 @@ import StackNavigator from "./StackNavigator";
 import PerfilScreen from "../screens/Perfil";
 import CalendarioScreen from "../screens/CalendarioScreen";
 import ResultadosScreen from "../screens/ResultadosScreen";
+import EstadiosScreen from "../screens/EstadiosScreen";
 
 // Screen Names
 const homeName = "Inicio";
 const resultsName = "Resultados";
+const stadiumsName = "Estadios";
 const profileName = "Perfil";
 const calendarName = "Calendario";
 
@@ -32,6 +34,8 @@ function MainContainer({ onLogout }) {
             iconName = focused ? "home" : "home-outline";
           } else if (rn === resultsName) {
             iconName = focused ? "trophy" : "trophy-outline";
+          } else if (rn === stadiumsName) {
+            iconName = focused ? "location" : "location-outline";
           } else if (rn === profileName) {
             iconName = focused ? "person" : "person-outline";
           } else if (rn === calendarName) {
@@ -56,6 +60,16 @@ function MainContainer({ onLogout }) {
       <Tab.Screen
         name={resultsName}
         component={ResultadosScreen}
+        options={{
+          headerShown: true,
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: "#fff",
+          headerTitleStyle: { fontWeight: "bold" },
+        }}
+      />
+      <Tab.Screen
+        name={stadiumsName}
+        component={EstadiosScreen}
         options={{
           headerShown: true,
           headerStyle: { backgroundColor: colors.primary },

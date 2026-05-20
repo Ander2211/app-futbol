@@ -9,6 +9,7 @@ import {
   FlatList,
   Image,
   TextInput,
+  useWindowDimensions,
 } from "react-native";
 import EventDetailScreen from "./EventDetailScreen";
 import { useTheme } from "../context/ThemeContext";
@@ -42,7 +43,10 @@ export default function ResultadosScreen() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
   const { colors, dark } = useTheme();
+  const { width } = useWindowDimensions();
+  const isCompactFilter = width <= 360;
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -122,9 +126,9 @@ export default function ResultadosScreen() {
     container: { flex: 1, backgroundColor: colors.background },
     filtersWrapper: {
       backgroundColor: colors.card,
-      height: 56,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+      paddingVertical: 10,
     },
     filterBtn: {
       height: 34,
@@ -133,10 +137,34 @@ export default function ResultadosScreen() {
       backgroundColor: dark ? "#333" : "#f0f0f0",
       justifyContent: "center",
       alignItems: "center",
+      marginRight: 10,
+      marginBottom: 10,
     },
     filterActive: { backgroundColor: colors.primary },
     filterText: { fontSize: 13, fontWeight: "600", color: colors.secondary },
     filterTextActive: { color: "#fff" },
+    filterToggle: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: dark ? "#222" : "#f5f5f5",
+      borderRadius: 16,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      marginHorizontal: 15,
+      marginBottom: 0,
+    },
+    filterToggleText: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: colors.text,
+    },
+    filterOptions: {
+      paddingHorizontal: 15,
+      paddingTop: 10,
+      flexDirection: "row",
+      flexWrap: "wrap",
+    },
     searchWrapper: {
       backgroundColor: colors.card,
       paddingHorizontal: 15,
@@ -237,31 +265,71 @@ export default function ResultadosScreen() {
   return (
     <View style={dynamicStyles.container}>
       <View style={dynamicStyles.filtersWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filtersContent}
-        >
-          {SPORTS.map((sport) => (
+        {isCompactFilter ? (
+          <>
             <TouchableOpacity
-              key={sport}
-              style={[
-                dynamicStyles.filterBtn,
-                selectedSport === sport && dynamicStyles.filterActive,
-              ]}
-              onPress={() => setSelectedSport(sport)}
+              style={dynamicStyles.filterToggle}
+              onPress={() => setFilterOpen((prev) => !prev)}
             >
-              <Text
-                style={[
-                  dynamicStyles.filterText,
-                  selectedSport === sport && dynamicStyles.filterTextActive,
-                ]}
-              >
-                {sport}
+              <Text style={dynamicStyles.filterToggleText}>
+                {selectedSport !== "Todos" ? `Deporte: ${selectedSport}` : "Filtrar por deporte"}
               </Text>
+              <Text style={dynamicStyles.filterToggleText}>{filterOpen ? "−" : "+"}</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+            {filterOpen && (
+              <View style={dynamicStyles.filterOptions}>
+                {SPORTS.map((sport) => (
+                  <TouchableOpacity
+                    key={sport}
+                    style={[
+                      dynamicStyles.filterBtn,
+                      selectedSport === sport && dynamicStyles.filterActive,
+                    ]}
+                    onPress={() => {
+                      setSelectedSport(sport);
+                      setFilterOpen(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        dynamicStyles.filterText,
+                        selectedSport === sport && dynamicStyles.filterTextActive,
+                      ]}
+                    >
+                      {sport}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filtersContent}
+          >
+            {SPORTS.map((sport) => (
+              <TouchableOpacity
+                key={sport}
+                style={[
+                  dynamicStyles.filterBtn,
+                  selectedSport === sport && dynamicStyles.filterActive,
+                ]}
+                onPress={() => setSelectedSport(sport)}
+              >
+                <Text
+                  style={[
+                    dynamicStyles.filterText,
+                    selectedSport === sport && dynamicStyles.filterTextActive,
+                  ]}
+                >
+                  {sport}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
       {/* Barra de búsqueda */}

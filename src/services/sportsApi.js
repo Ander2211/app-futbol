@@ -24,4 +24,16 @@ export const getTeamBadge = async (teamName) => {
   return data.teams?.[0]?.strBadge || null;
 };
 
+export const getTeamsByLeague = async (leagueName) => {
+  const res = await fetch(`${BASE_URL}/search_all_teams.php?l=${encodeURIComponent(leagueName)}`);
+  const data = await res.json();
+  return data.teams || [];
+};
+
+export const getTeamById = async (teamId) => {
+  const res = await fetch(`${BASE_URL}/lookupteam.php?id=${encodeURIComponent(teamId)}`);
+  const data = await res.json();
+  return data.teams?.[0] || null;
+};
+
 export default {};
